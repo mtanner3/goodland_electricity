@@ -1,35 +1,52 @@
 import sys
+#import array
 num_cities, tower_range = map(int,raw_input().strip().split())
 tower_range -= 1
 tower_presence_arr = map(int,raw_input().strip().split())
 
-who_covers = []
-coverage_arr = []
-def setup():
-    for idx in range(num_cities):
-        coverage_arr.append(0)
-        who_covers.append([])
+# using these 2 lines (and .keys() below) yields 49.392 seconds
+#furthest_cover = {}
+#coverage_arr   = {}
+# using these 2 lines yields 53.577 seconds
+#furthest_cover = array.array('I', [0]*num_cities)
+#coverage_arr   = array.array('I', [0]*num_cities)
+
+# using these 2 lines yields 37.034 seconds
+furthest_cover = [None] * num_cities
+coverage_arr = [0] * num_cities
+
+def get_ledge(idx):
+    ledge = idx-tower_range
+    if ledge < 0: 
+        ledge = 0
+    return ledge
+
+maxidx = num_cities - 1
+def get_redge(idx):
+    redge = idx+tower_range
+    if redge > maxidx:
+        redge = maxidx
+    return redge
+
+def assign_coverage(iidx, idx):
+    coverage_arr[iidx] = 1
+    furthest_cover[iidx] = idx
 
 def coverage():
-    maxidx = len(coverage_arr)-1
-    for idx in range(num_cities):
+    for idx in xrange(num_cities):
         if tower_presence_arr[idx] == 1:
-            #ledge = max(0, idx-tower_range)
-            ledge = idx-tower_range
-            if ledge < 0: 
-                ledge = 0
-            #redge = min(len(coverage_arr)-1, idx+tower_range)
-            redge = idx+tower_range
-            if redge > maxidx:
-                redge = maxidx
+            ledge = get_ledge(idx)
+            redge = get_redge(idx)
             iidx = ledge
             while iidx <= redge:
-                coverage_arr[iidx] += 1
-                who_covers[iidx].append(idx)
+                #assign_coverage(iidx, idx)
+                coverage_arr[iidx] = 1
+                furthest_cover[iidx] = idx
                 iidx += 1
 
 def early_exit():
     # first look for unsolvable and immediately bail
+    #if 0 in coverage_arr.keys():
     if 0 in coverage_arr:
         print "-1"
         sys.exit(0)
@@ -37,24 +54,21 @@ def early_exit():
 def final_coverage():
     final_coverage = []
     current_tower = None
-    for idx in range(num_cities):
-        if current_tower in who_covers[idx]:
+    for idx in xrange(num_cities):
+        if current_tower is None:
+            current_tower = furthest_cover[idx]
+        if (idx - current_tower) <= tower_range:
             continue
         else:
-            current_tower = max(who_covers[idx])
+            current_tower = furthest_cover[idx]
             final_coverage.append(current_tower)
-    print len(final_coverage)
+    print len(final_coverage) + 1
 
 def main():
-    setup()
     coverage()
     early_exit()
     final_coverage()
 
-#main()
-import cProfile
-cProfile.run('main()')
-#import pstats
-#p = pstats.Stats('stats.txt')
-#p.sort_stats('time')
-#p.print_stats()
+main()
+#import cProfile
+#cProfile.run('main()')
